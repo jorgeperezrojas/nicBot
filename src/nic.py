@@ -65,6 +65,7 @@ def main():
     parser.add_argument('-e', '--every', type=int, default=720, metavar='N', help='Minutos cada cuanto se reporta (independiente del resultado).')
     parser.add_argument('-s', '--segundos', type=int, default=60, metavar='S', help='Segundos cada cuanto se consulta el servicio de NIC Chile.')
     parser.add_argument('-m', '--multiplicador', type=float, default=2.0, metavar='M', help='Base de delay exponencial de espera para alertar cuando ya se ha liberado el dominio.')
+    parser.add_argument('-M', '--maxRequests', type=int, default=25000, metavar='R', help='Número máximo de requests totales.')
 
     args = parser.parse_args()
     verbose = not args.notVerbose
@@ -72,6 +73,7 @@ def main():
     segundos = args.segundos
     url = args.url
     mult = args.multiplicador
+    maxRequests = args.maxRequests
 
     initial_politeness += segundos
 
@@ -88,6 +90,10 @@ def main():
         
     free_message = '****** ' + url + ' ESTA LIBRE!!!! ******\n\n PARA INSCRIBIR, IR AHORA A\n\n' + nic_base + url 
     while True:
+        if i == maxRequests:
+            print()
+            print('Terminando esta ejecución... bye')
+            break
         if i % every == 0:
             report_anyway = True
 
