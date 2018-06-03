@@ -8,11 +8,14 @@ import mechanicalsoup
 import argparse
 
 
-TOKEN = "" # token del roboot
-ID = 11111111 # identificador del usuario al que se enviarán las alertas
+# TOKEN = # token del roboot
+# ID = # identificador del usuario al que se enviarán las alertas
 
 URLTEL = "https://api.telegram.org/bot{}/".format(TOKEN)
 nic_base = "http://www.nic.cl/registry/Whois.do?d="
+initial_politeness = 30
+politeness = initial_politeness
+politeness_tel = initial_politeness
 
 def get_url(url):
     response = requests.get(url)
@@ -25,19 +28,34 @@ def send_message(text, chat_id):
     get_url(url)
 
 def unconditional(message, chat_id):
+  global politeness_tel
+  try:
     send_message(message, chat_id)
+    politeness_tel = initial_politeness
+  except Exception as e:
+    print('Exception telegram! waiting ' + str(politeness_tel) + 's')
+    time.sleep(politeness_tel)
+    politeness_tel = 1.2 * politeness_tel
 
 def is_free(url):
+  global politeness
+  try:
     browser = mechanicalsoup.StatefulBrowser()
     url = nic_base + url
     o = browser.open(url)
     page = browser.get_current_page()
     first_button = page.find_all('button')[0]
-
+    politeness = initial_politeness
     if first_button.text.startswith('Inscribir'):
         return True
     elif first_button.text.startswith('Restaurar'):
         return False
+  except Exception as e:
+#    unconditional('error!!! waiting ' + str(politeness) + 's to retry', ID)
+    print('Exception en nic! waiting ' + str(politeness) + 's')
+    time.sleep(politeness)
+    politeness = 1.2 * politeness
+    return False
     
 def main():
 
@@ -71,8 +89,7 @@ def main():
     t = segundos
     every = int((60 * every_minutes) / t)
     add_delay = 1
-    
-    
+        
     free_message = '****** ' + url + ' ESTA LIBRE!!!! ******\n\n PARA INSCRIBIR, IR AHORA A\n\n' + nic_base + url 
     while True:
         if i % every == 0:
