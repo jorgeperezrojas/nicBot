@@ -13,6 +13,8 @@ import argparse
 
 URLTEL = "https://api.telegram.org/bot{}/".format(TOKEN)
 nic_base = "http://www.nic.cl/registry/Whois.do?d="
+
+# TODO: cambiar estos parámetros para que no sean variables globales
 initial_politeness = 30
 politeness = initial_politeness
 politeness_tel = initial_politeness
@@ -51,18 +53,12 @@ def is_free(url):
     elif first_button.text.startswith('Restaurar'):
         return False
   except Exception as e:
-#    unconditional('error!!! waiting ' + str(politeness) + 's to retry', ID)
     print('Exception en nic! waiting ' + str(politeness) + 's')
     time.sleep(politeness)
     politeness = 1.2 * politeness
     return False
     
 def main():
-
-    # por si olivdé cambiar la configuración inicial
-    assert TOKEN != ""
-    assert ID != 11111111
-
     parser = argparse.ArgumentParser(description='Robot para avisar si un dominio de NIC Chile se ha liberado.')
     parser.add_argument('url', metavar='URL', type=str,
                         help='Url a consultar')
