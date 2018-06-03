@@ -1,8 +1,6 @@
 import time
-import json 
 import requests
 import urllib
-import random
 from sys import stdout
 import mechanicalsoup
 import argparse
@@ -64,7 +62,7 @@ def main():
                         help='Url a consultar')
     parser.add_argument('-nv', '--notVerbose', default=False, action='store_true',
                         help='Muestra 0 información del funcionamiento.')
-    parser.add_argument('-e', '--every', type=int, default=5, metavar='N', help='Minutos cada cuanto se reporta (independiente del resultado).')
+    parser.add_argument('-e', '--every', type=int, default=720, metavar='N', help='Minutos cada cuanto se reporta (independiente del resultado).')
     parser.add_argument('-s', '--segundos', type=int, default=60, metavar='S', help='Segundos cada cuanto se consulta el servicio de NIC Chile.')
     parser.add_argument('-m', '--multiplicador', type=float, default=2.0, metavar='M', help='Base de delay exponencial de espera para alertar cuando ya se ha liberado el dominio.')
 
