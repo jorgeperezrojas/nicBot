@@ -1,4 +1,5 @@
 import time
+import datetime
 import requests
 import urllib
 from sys import stdout
@@ -63,7 +64,7 @@ def main():
     parser.add_argument('-nv', '--notVerbose', default=False, action='store_true',
                         help='Muestra 0 información del funcionamiento.')
     parser.add_argument('-e', '--every', type=int, default=720, metavar='N', help='Minutos cada cuanto se reporta (independiente del resultado).')
-    parser.add_argument('-s', '--segundos', type=int, default=60, metavar='S', help='Segundos cada cuanto se consulta el servicio de NIC Chile.')
+    parser.add_argument('-s', '--segundos', type=int, default=5, metavar='S', help='Segundos cada cuanto se consulta el servicio de NIC Chile.')
     parser.add_argument('-m', '--multiplicador', type=float, default=2.0, metavar='M', help='Base de delay exponencial de espera para alertar cuando ya se ha liberado el dominio.')
     parser.add_argument('-M', '--maxRequests', type=int, default=25000, metavar='R', help='Número máximo de requests totales.')
 
@@ -74,6 +75,7 @@ def main():
     url = args.url
     mult = args.multiplicador
     maxRequests = args.maxRequests
+    reportAt = 11
 
     initial_politeness += segundos
 
@@ -82,6 +84,8 @@ def main():
 
     report_anyway = False
     was_free = False
+    report_time = False
+    already_reported_time = False
 
     i = 0
     t = segundos
@@ -94,8 +98,20 @@ def main():
             print()
             print('Terminando esta ejecución... bye')
             break
-        if i % every == 0:
+        if i % every == every - 1:
             report_anyway = True
+
+        ahora = datetime.datetime.now()
+        hora = ahora.hour
+        minuto = ahora.minute
+
+        if (hora == reportAt or hora == 12 + reportAt) and minuto == 0:
+            if already_reported_time:
+                report_time = False
+            else:
+                report_time = True
+        elif (hora == reportAt or hora == 12 + reportAt) and minuto > 0:
+            already_reported_time = False
 
         if verbose:
             stdout.write('\r' + str(i) + ' requests enviadas a ' + str(nic_base) + url)
@@ -110,7 +126,7 @@ def main():
             break
 
 
-        if go or report_anyway:
+        if go or report_anyway or report_time:
             if verbose:
                 print('\nreportando...')
             if go:
@@ -119,10 +135,14 @@ def main():
                 t += add_delay
                 unconditional('(siguiente alerta en ' + str(int(t)) + 's)', ID)
                 was_free = True
-            else:
-                message = 'Consultado ' + str(i) + ' veces. Dominio ' + url + ' sigue sin liberarse'
+            elif report_anyway:
+                message = 'Dominio ' + url + ' sigue sin liberarse'
                 unconditional(message, ID)
                 report_anyway = False
+            elif report_time:
+                message = 'Dominio ' + url + ' sigue sin liberarse'
+                unconditional(message, ID)
+                already_reported_time = True
 
         i += 1
         time.sleep(t)
